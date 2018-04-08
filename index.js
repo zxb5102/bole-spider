@@ -25,7 +25,6 @@ function findAllEntry(url) {
                 console.log('开始收集第' + entryList.length + '页信息....');
                 const $ = cheerio.load(rawData)
                 $('.list-posts li').each(function (i, ele) {
-                    // debugger;
                     if (i != 0) {
                         var each = $(ele).find('.p-tit a').attr('href');
                         girlList.push(each);
@@ -57,7 +56,7 @@ function findAllEntry(url) {
             }
         });
     }).on('error', (e) => {
-        console.error(`Got error: ${e.message}`);
+        console.error(`Got error2: ${e.message}`);
     });
 }
 function getDetail(url) {
@@ -79,35 +78,34 @@ function getDetail(url) {
                     const $ = cheerio.load(rawData)
                     $('.p-entry p').each(function (i, ele) {
                         var value = $(ele).text();
-                        var result = other.extract(value);
-                        switch (result.key) {
-                            case 'birth':
-                                user.birth = result.value;
-                                break;
-                        }
+                        user = other.extract(value, user);
+                        // switch (result.key) {
+                        //     case 'birth':
+                        //         user.birth = result.value;
+                        //         break;
+                        // }
                     });
-                    // return user;
+                    var title = $('.p-tit-single').text();
+                    user.title = title;
+                    var publishDate = $('p.p-meta > span:nth-child(1)').text();
+                    user.publishDate = publishDate;
+                    var address = $('p.p-meta > span:nth-child(2)').text();
+                    user.address = address;
                     resolve(user);
                 } catch (e) {
                     console.error("提取信息出错" + e.message);
-                    reject({
-                        url: url
-                    });
+                    reject(url);
                 }
             });
         }).on('error', (e) => {
-            console.error(`Got error: ${e.message}`);
-            reject({
-                url: url
-            });
+            console.error(`Got error3: ${e.message}`);
+            reject(url);
         }).on('socket', function (socket) {
             socket.setTimeout(5000);
             socket.on('timeout', function () {
                 console.log('切断请求');
                 req.abort();
-                reject({
-                    url: url
-                });
+                reject(url);
             });
         });
     });
@@ -126,50 +124,70 @@ function getFromLocal() {
         }
     });
 }
+var girlObjAry = [];
+var girlSize = 0;
+var flag = true;
 function dealGirlList() {
-    var girlMsg = [];
-    var dex = 0;
-    var errorList = [];
+    // var dex = 0;
+    // var errorList = [];
     new Promise(function (r, j) {
-        var allSize = girlList.length;
         for (var girl of girlList) {
             if (girl.trim() != '') {
-                getDetail(girl).then(function (user) {
-                    girlMsg.push(user);
-                    console.log('已经收集第' + (dex++) + '个女生的数据');
-                    var errorSize = errorList.length
-                    var successSize = girlMsg.length
-                    console.log('还差' + (allSize - errorSize - successSize));
-                    if (errorSize + successSize == allSize) {
-                        console.log('舍弃' + errorSize + '条记录');
-                        console.log('可用' + successSize + '条记录');
-                        r(girlMsg);
-                    }
-                }).catch(function (error) {
-                    console.log('重新记录-----》' + error.url);
-                    errorList.push(error.url);
-                    var errorSize = errorList.length
-                    var successSize = girlMsg.length
-                    console.log('还差' + (allSize - errorSize - successSize));
-                    if (errorSize + successSize == allSize) {
-                        console.log('舍弃' + errorSize + '条记录');
-                        console.log('可用' + successSize + '条记录');
-                        console.log('2s后开启下一轮');
-                        setTimeout(function () {
-                            girlList = ary;
-                            dealGirlList();
-                        }, 2000)
-                        r(girlMsg);
-                    }
-                })
-            } else {
-                allSize--;
+                if (flag) {
+                    girlSize++;
+                }
+                dealGirl(girl, r);
             }
+            // if (girl.trim() != '') {
+            //     getDetail(girl).then(function (user) {
+            //         girlObjAry.push(user);
+            //         r(girlObjAry);
+            //     }).catch(function (error) {
+            //     })
+            // }
         }
     }).then(function (data) {
-        debugger;
         // other.save(girlMsg);
+        var per = (dealGirlSize / (dealGirlSize + errorGirlList.length) * 100);
+        if (per == 100) {
+            console.log('开始写入数据库');
+            other.save(girlObjAry);
+        } else {
+            console.log(per + '%');
+            console.log('休息一下.....');
+            flag = false;
+            setTimeout(() => {
+                girlList = errorGirlList.slice();
+                errorGirlList = [];
+                dealGirlList();
+            }, 5000);
+        }
     });
+}
+// var flag = true;
+var dealGirlSize = 0;
+var errorGirlList = [];
+function dealGirl(girl, r) {
+    getDetail(girl).then(function (user) {
+        girlObjAry.push(user);
+        console.log(girlObjAry.length + '         ' + errorGirlList.length + '        ' + girlSize);
+        dealGirlSize++;
+        if (girlObjAry.length + errorGirlList.length == girlSize) {
+            console.log('所有处理完毕');
+            r();
+        }
+    }).catch(function (egirl) {
+        errorGirlList.push(egirl);
+        console.log(girlObjAry.length + '         ' + errorGirlList.length + '        ' + girlSize);
+        if (girlObjAry.length + errorGirlList.length == girlSize) {
+            console.log('所有处理完毕');
+            r();
+        }
+        // console.log('暂停2秒 开始回溯');
+        // setTimeout(() => {
+        //     dealGirl(egirl);
+        // }, 2000)
+    })
 }
 
 // other.save([{ birth: 'fjdskl' },{ birth: 'fjdsfdksfjslfkl' }]);
