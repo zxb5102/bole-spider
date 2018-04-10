@@ -8,7 +8,7 @@ var other = require('./each.js');
 var entryList = [];
 var girlList = [];
 
-// findAllEntry('http://date.jobbole.com/');
+// findAllEntry('http://sou.zhaopin.com/jobs/searchresult.ashx?jl=%E6%9D%AD%E5%B7%9E&kw=%E5%89%8D%E7%AB%AF');
 function findAllEntry(url) {
     var req = http.get(url, (res) => {
         const { statusCode } = res;
@@ -24,21 +24,17 @@ function findAllEntry(url) {
                 entryList.push(rawData);
                 console.log('开始收集第' + entryList.length + '页信息....');
                 const $ = cheerio.load(rawData)
-                $('.list-posts li').each(function (i, ele) {
+                $('#newlist_list_content_table table').each(function (i, ele) {
                     if (i != 0) {
-                        var each = $(ele).find('.p-tit a').attr('href');
+                        var each = $(ele).find('.zwmc a').attr('href');
                         girlList.push(each);
-                    } else {
-                        console.log(11111111111111111111111);
                     }
                 });
-                console.log('已添加' + girlList.length + '位女生信息');
-                var next = $('#pagination-next-page > a').attr('href');
+                console.log('已添加' + girlList.length + '条招聘信息');
+                var next = $('a[class=next-page]').attr('href');
                 if (next) {
                     findAllEntry(next);
-                }
-                if (entryList.length == 20) {
-                    // dealGirlList();
+                } else {
                     console.log('处理完毕');
                     var allLink = "";
                     for (girlLink of girlList) {
@@ -76,21 +72,19 @@ function getDetail(url) {
             res.on('end', () => {
                 try {
                     const $ = cheerio.load(rawData)
-                    $('.p-entry p').each(function (i, ele) {
+                    $('ul[class="terminal-ul clearfix"] li').each(function (i, ele) {
                         var value = $(ele).text();
                         user = other.extract(value, user);
-                        // switch (result.key) {
-                        //     case 'birth':
-                        //         user.birth = result.value;
-                        //         break;
-                        // }
                     });
-                    var title = $('.p-tit-single').text();
+                    var title = $('.top-fixed-box .fl h1').text();
                     user.title = title;
-                    var publishDate = $('p.p-meta > span:nth-child(1)').text();
-                    user.publishDate = publishDate;
-                    var address = $('p.p-meta > span:nth-child(2)').text();
-                    user.address = address;
+                    var company = $('.top-fixed-box .fl h2 a').text();
+                    user.company = company;
+                    var welfare = "";
+                    $('.welfare-tab-box span').each(function (i, ele) {
+                        welfare += $(ele).text()+",";
+                    })//text();
+                    user.welfare = welfare;
                     resolve(user);
                 } catch (e) {
                     console.error("提取信息出错" + e.message);
@@ -150,6 +144,7 @@ function dealGirlList() {
         // other.save(girlMsg);
         var per = (dealGirlSize / (dealGirlSize + errorGirlList.length) * 100);
         if (per == 100) {
+            // debugger;
             console.log('开始写入数据库');
             other.save(girlObjAry);
         } else {
@@ -183,11 +178,5 @@ function dealGirl(girl, r) {
             console.log('所有处理完毕');
             r();
         }
-        // console.log('暂停2秒 开始回溯');
-        // setTimeout(() => {
-        //     dealGirl(egirl);
-        // }, 2000)
     })
 }
-
-// other.save([{ birth: 'fjdskl' },{ birth: 'fjdsfdksfjslfkl' }]);

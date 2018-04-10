@@ -4,27 +4,23 @@ var http = require('http');
 var cheerio = require('cheerio')
 var url = "mongodb://localhost:27017/";
 
-function extract(str,user) {
-    // var obj = {
-    //     key: '',
-    //     value: ''
-    // };
-    var ary = str.split('\n');
-    var birthStr = '出生年月：';
-    var heightStr = '身高：';
-    var incomeStr = '收入描述：'
-    var educationStr = '学历：'
-    // user.birth = user.height = user.income = user.education = '';
+function extract(str, user) {
+    var init = "职位月薪：#income,工作地点：#address,发布日期：#publishDate,工作性质：#category,工作经验：#experience,最低学历：#education,招聘人数：#requireNum,职位类别：#position"
+    var ary = init.split(',');
+    var rules = [];
+    // debugger;
     for (var item of ary) {
-        if (item.indexOf(birthStr) > -1) {
-            user.birth = item.replace(birthStr, '');
-            // obj.key = 'birth';
-        }else if(item.indexOf(heightStr) > -1){
-            user.height = item.replace(heightStr, '');
-        }else if(item.indexOf(incomeStr) > -1){
-            user.income = item.replace(incomeStr,'');
-        }else if(item.indexOf(educationStr) > -1){
-            user.education = item.replace(educationStr,'');
+        var rule = {};
+        var each = item.split('#');
+        rule.replaceStr = each[0];
+        rule.field = each[1];
+        rules.push(rule);
+    }
+    for (var item of rules) {
+        var rep = item.replaceStr;
+        var val = item.field;
+        if (str.indexOf(rep) > -1) {
+            user[val] = str.replace(rep, '');
         }
     }
     return user;
@@ -35,7 +31,7 @@ function save(objs) {
         if (err) throw err;
         var dbo = db.db("see");
         // var myobj = { name: "Company Inc", address: "Highway 37" };
-        var coll = dbo.collection("user");
+        var coll = dbo.collection("work");
         dex = 0;
         for (item of objs) {
             coll.insertOne(item, function (err, res) {
