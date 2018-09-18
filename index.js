@@ -8,7 +8,8 @@ var resultData = {
   data: { results: [] }
 };
 var pageSize = 100;
-var sourceUrl = `https://fe-api.zhaopin.com/c/i/sou?pageSize=${pageSize}&cityId=653&salary=8001,10000&workExperience=-1&education=-1&companyType=-1&employmentType=-1&jobWelfareTag=-1&kw=web%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%B8%88&kt=3&lastUrlQuery=%7B%22pageSize%22:%2260%22,%22jl%22:%22653%22,%22sf%22:%228001%22,%22st%22:%2210000%22,%22kw%22:%22web%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%B8%88%22,%22kt%22:%223%22,%22%22:%228001%22%7D&=8001`;
+// var sourceUrl = `https://fe-api.zhaopin.com/c/i/sou?pageSize=${pageSize}&cityId=653&salary=8001,10000&workExperience=-1&education=-1&companyType=-1&employmentType=-1&jobWelfareTag=-1&kw=web%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%B8%88&kt=3&lastUrlQuery=%7B%22pageSize%22:%2260%22,%22jl%22:%22653%22,%22sf%22:%228001%22,%22st%22:%2210000%22,%22kw%22:%22web%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%B8%88%22,%22kt%22:%223%22,%22%22:%228001%22%7D&=8001`;
+var sourceUrl = `https://fe-api.zhaopin.com/c/i/sou?pageSize=${pageSize}&cityId=653&salary=8001,10000&workExperience=-1&education=-1&companyType=-1&employmentType=-1&jobWelfareTag=-1&kw=%E5%89%8D%E7%AB%AF&kt=3&lastUrlQuery=%7B%22pageSize%22:%2260%22,%22jl%22:%22653%22,%22sf%22:%228001%22,%22st%22:%2210000%22,%22kw%22:%22%E5%89%8D%E7%AB%AF%22,%22kt%22:%223%22,%22%22:%224001%22%7D&=4001`
 //start=0&
 var c = new Crawler({
   jQuery: false,
